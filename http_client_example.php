@@ -117,3 +117,16 @@ curl_multi_close($mh);
 $end = microtime(true);
 echo "time: " . ($end - $start) . "s" . PHP_EOL;
 file_put_contents(__DIR__ . "/result3.txt", implode(PHP_EOL, $urlList));
+
+
+exit;
+
+$util = FFI::cdef(
+    "void print(char* p0);
+    int sum(int p0, int p1);",
+    __DIR__ . "/libutil.so"
+);
+
+$util->print(
+    (string) $util->sum(2, 4)
+);
