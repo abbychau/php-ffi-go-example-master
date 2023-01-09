@@ -8,6 +8,7 @@ import (
 )
 import (
 	"reflect"
+	"sync"
 	"unsafe"
 )
 
@@ -86,47 +87,51 @@ func goroutineRun(url1 string, url2 string) **C.char {
 //export urlMultiGet
 func urlMultiGet(urls []string) **C.char {
 
-	chanResults := make(chan string)
-	for i, url := range urls {
-		go func(i int, url string) {
-			chanResults <- httpGetGoString(url)
-		}(i, url)
-	}
+	// get all the urls response and put to the return with the same order
+	var wg sync.WaitGroup
+	wg.Add(len(urls))
 
 	cArray := C.malloc(C.size_t(len(urls)) * C.size_t(unsafe.Sizeof(uintptr(0))))
 
-	for i := 0; i < len(urls); i++ {
-		*(*uintptr)(unsafe.Pointer(uintptr(cArray) + uintptr(i)*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(<-chanResults)))
+	for i, url := range urls {
+		go func(i int, url string) {
+			defer wg.Done()
+			*(*uintptr)(unsafe.Pointer(uintptr(cArray) + uintptr(i)*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(httpGetGoString(url))))
+		}(i, url)
 	}
 
+	wg.Wait()
+
 	return (**C.char)(cArray)
+
 }
 
 func main() {
-	url1 := "http://httpbin.org/get"
-	url2 := "http://httpbin.org/headers"
+	// url1 := "http://httpbin.org/get"
+	// url2 := "http://httpbin.org/headers"
 
-	cArray := goroutineRun(url1, url2)
+	// cArray := goroutineRun(url1, url2)
 
 	var slice []*C.char
-	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&slice)))
-	sliceHeader.Cap = 2
-	sliceHeader.Len = 2
-	sliceHeader.Data = uintptr(unsafe.Pointer(cArray))
+	// sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&slice)))
+	// sliceHeader.Cap = 2
+	// sliceHeader.Len = 2
+	// sliceHeader.Data = uintptr(unsafe.Pointer(cArray))
 
-	fmt.Println(C.GoString(slice[0]))
-	fmt.Println(C.GoString(slice[1]))
+	// fmt.Println(C.GoString(slice[0]))
+	// fmt.Println(C.GoString(slice[1]))
 
 	//test urlMultiGet
 	urls := []string{"http://httpbin.org/get", "http://httpbin.org/headers"}
-	cArray = urlMultiGet(urls)
+	cArray := urlMultiGet(urls)
 
-	sliceHeader = (*reflect.SliceHeader)((unsafe.Pointer(&slice)))
+	sliceHeader := (*reflect.SliceHeader)((unsafe.Pointer(&slice)))
 	sliceHeader.Cap = len(urls)
 	sliceHeader.Len = len(urls)
 	sliceHeader.Data = uintptr(unsafe.Pointer(cArray))
 
 	for i := 0; i < len(urls); i++ {
+		fmt.Printf("urls: %v, i: %v", urls[i], i)
 		fmt.Println(C.GoString(slice[i]))
 	}
 }

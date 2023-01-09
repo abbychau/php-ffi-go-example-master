@@ -40,6 +40,22 @@ or use `./buildGoLib.sh`
 /$HOMEX/php-8.2.1/sapi/cli/php http_client_example.php
 ```
 
+
+### Benchmark Results
+
+```
+Concurrent HTTP GET:
+time: 2.534019947052s
+
+Sequential HTTP GET:
+time: 8.3288960456848s
+
+Curl Multi HTTP GET:
+time: 3.9369158744812s
+```
+
+I win!
+
 ## References
 
 - [PHP: FFI - Manual](https://www.php.net/manual/en/book.ffi.php)

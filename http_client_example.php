@@ -47,12 +47,11 @@ $ffi = FFI::cdef(
 
 
 
-// $url = makeGoStr($ffi, "http://httpbin.org/headers");
+$url = makeGoStr($ffi, "http://httpbin.org/headers");
+$url2 = makeGoStr($ffi, "http://httpbin.org/get");
+$res2 = $ffi->goroutineRun($url, $url2);
 
 // echo FFI::string($ffi->httpGet($url));
-// $url2 = makeGoStr($ffi, "http://httpbin.org/get");
-
-// $res2 = $ffi->goroutineRun($url, $url2);
 // echo FFI::string($res2[0]);
 // echo FFI::string($res2[1]);
 
@@ -62,7 +61,7 @@ function urlMultiGet(array $urls): array
     $urlList = makeGoStrSlice($ffi, $urls);
     $res = $ffi->urlMultiGet($urlList);
     $resArr = [];
-    for($i = 0; $i < count($urls); $i++) {
+    for ($i = 0; $i < count($urls); $i++) {
         $resArr[] = FFI::string($res[$i]);
     }
     return $resArr;
@@ -73,50 +72,69 @@ $urls = [
 
 ];
 
+
+//empty result1.txt result2.txt result3.txt
+file_put_contents(__DIR__ . "/result1.txt", "");
+file_put_contents(__DIR__ . "/result2.txt", "");
+file_put_contents(__DIR__ . "/result3.txt", "");
+
 //start timing
 echo "Concurrent HTTP GET:" . PHP_EOL;
 $start = microtime(true);
-$urlList = urlMultiGet($urls);
+// $urlList = urlMultiGet($urls);
+
+for ($i = 0; $i < 10; $i++) {
+    $urlList = urlMultiGet($urls);
+    file_put_contents(__DIR__ . "/result1.txt", implode(PHP_EOL, $urlList), FILE_APPEND);
+}
 //end timing
 $end = microtime(true);
 echo "time: " . ($end - $start) . "s" . PHP_EOL;
-file_put_contents(__DIR__ . "/result1.txt", implode(PHP_EOL, $urlList));
+
 
 //start timing
 echo "Sequential HTTP GET:" . PHP_EOL;
 $start = microtime(true);
-foreach($urls as $url) {
-    $urlList[] = file_get_contents($url);
+for ($i = 0; $i < 10; $i++) {
+    foreach ($urls as $url) {
+        $urlList[] = file_get_contents($url);
+    }
+    file_put_contents(__DIR__ . "/result2.txt", implode(PHP_EOL, $urlList), FILE_APPEND);
 }
 //end timing
 $end = microtime(true);
 echo "time: " . ($end - $start) . "s" . PHP_EOL;
-file_put_contents(__DIR__ . "/result2.txt", implode(PHP_EOL, $urlList));
+
 
 //use curl multi
 echo "Curl Multi HTTP GET:" . PHP_EOL;
+
 $start = microtime(true);
-$mh = curl_multi_init();
-foreach($urls as $url) {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    curl_multi_add_handle($mh, $ch);
+
+for ($i = 0; $i < 10; $i++) {
+    $mh = curl_multi_init();
+    foreach ($urls as $url) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_multi_add_handle($mh, $ch);
+    }
+    $running = null;
+    do {
+        curl_multi_exec($mh, $running);
+    } while ($running);
+    foreach ($urls as $url) {
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $urlList[] = curl_multi_getcontent($ch);
+        curl_multi_remove_handle($mh, $ch);
+    }
+    curl_multi_close($mh);
+    //end timing
+    file_put_contents(__DIR__ . "/result3.txt", implode(PHP_EOL, $urlList), FILE_APPEND);
 }
-$running = null;
-do {
-    curl_multi_exec($mh, $running);
-} while ($running);
-foreach($urls as $url) {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-    $urlList[] = curl_multi_getcontent($ch);
-    curl_multi_remove_handle($mh, $ch);
-}
-curl_multi_close($mh);
-//end timing
 $end = microtime(true);
 echo "time: " . ($end - $start) . "s" . PHP_EOL;
-file_put_contents(__DIR__ . "/result3.txt", implode(PHP_EOL, $urlList));
+
 
 
 exit;
