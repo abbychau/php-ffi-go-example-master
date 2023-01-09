@@ -47,9 +47,9 @@ $ffi = FFI::cdef(
 
 
 
-$url = makeGoStr($ffi, "http://httpbin.org/headers");
-$url2 = makeGoStr($ffi, "http://httpbin.org/get");
-$res2 = $ffi->goroutineRun($url, $url2);
+// $url = makeGoStr($ffi, "http://httpbin.org/headers");
+// $url2 = makeGoStr($ffi, "http://httpbin.org/get");
+// $res2 = $ffi->goroutineRun($url, $url2);
 
 // echo FFI::string($ffi->httpGet($url));
 // echo FFI::string($res2[0]);
@@ -137,14 +137,14 @@ echo "time: " . ($end - $start) . "s" . PHP_EOL;
 
 
 
-exit;
+// exit;
 
-$util = FFI::cdef(
-    "void print(char* p0);
-    int sum(int p0, int p1);",
-    __DIR__ . "/libutil.so"
-);
+// $util = FFI::cdef(
+//     "void print(char* p0);
+//     int sum(int p0, int p1);",
+//     __DIR__ . "/libutil.so"
+// );
 
-$util->print(
-    (string) $util->sum(2, 4)
-);
+// $util->print(
+//     (string) $util->sum(2, 4)
+// );

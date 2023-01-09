@@ -45,13 +45,13 @@ or use `./buildGoLib.sh`
 
 ```
 Concurrent HTTP GET:
-time: 2.534019947052s
+time: 2.4787259101868s
 
 Sequential HTTP GET:
-time: 8.3288960456848s
+time: 8.0801479816437s
 
 Curl Multi HTTP GET:
-time: 3.9369158744812s
+time: 3.8959860801697s
 ```
 
 I win!

@@ -12,32 +12,32 @@ import (
 	"unsafe"
 )
 
-//export print
-func print(out *C.char) {
-	fmt.Println("[GO print] " + C.GoString(out))
-}
+// //export print
+// func print(out *C.char) {
+// 	fmt.Println("[GO print] " + C.GoString(out))
+// }
 
-//export sum
-func sum(a C.int, b C.int) C.int {
-	return a + b
-}
+// //export sum
+// func sum(a C.int, b C.int) C.int {
+// 	return a + b
+// }
 
 //export httpGet
-func httpGet(url string) *C.char {
-	resp, err := http.Get(url)
-	if err != nil {
-		panic(err)
-	}
+// func httpGet(url string) *C.char {
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	defer resp.Body.Close()
+// 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		panic(err)
-	}
+// 	body, err := ioutil.ReadAll(resp.Body)
+// 	if err != nil {
+// 		panic(err)
+// 	}
 
-	return C.CString(string(body))
-}
+// 	return C.CString(string(body))
+// }
 
 func httpGetGoString(url string) string {
 	resp, err := http.Get(url)
@@ -56,33 +56,33 @@ func httpGetGoString(url string) string {
 
 }
 
-func get(url string, c chan string) {
-	res := httpGetGoString(url)
-	c <- res
-}
+// func get(url string, c chan string) {
+// 	res := httpGetGoString(url)
+// 	c <- res
+// }
 
-//export goroutineRun
-func goroutineRun(url1 string, url2 string) **C.char {
+// //export goroutineRun
+// func goroutineRun(url1 string, url2 string) **C.char {
 
-	c1 := make(chan string)
-	c2 := make(chan string)
+// 	c1 := make(chan string)
+// 	c2 := make(chan string)
 
-	go get(url1, c1)
-	go get(url2, c2)
+// 	go get(url1, c1)
+// 	go get(url2, c2)
 
-	//get result
-	res1 := <-c1
-	res2 := <-c2
+// 	//get result
+// 	res1 := <-c1
+// 	res2 := <-c2
 
-	cArray := C.malloc(C.size_t(2) * C.size_t(unsafe.Sizeof(uintptr(0))))
+// 	cArray := C.malloc(C.size_t(2) * C.size_t(unsafe.Sizeof(uintptr(0))))
 
-	//set result to cArray
-	*(*uintptr)(unsafe.Pointer(uintptr(cArray) + 0*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(res1)))
-	*(*uintptr)(unsafe.Pointer(uintptr(cArray) + 1*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(res2)))
+// 	//set result to cArray
+// 	*(*uintptr)(unsafe.Pointer(uintptr(cArray) + 0*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(res1)))
+// 	*(*uintptr)(unsafe.Pointer(uintptr(cArray) + 1*unsafe.Sizeof(uintptr(0)))) = uintptr(unsafe.Pointer(C.CString(res2)))
 
-	return (**C.char)(cArray)
+// 	return (**C.char)(cArray)
 
-}
+// }
 
 //export urlMultiGet
 func urlMultiGet(urls []string) **C.char {
